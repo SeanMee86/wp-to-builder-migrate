@@ -14,12 +14,18 @@ type WPData struct {
 	Excerpt RenderedData `json:"excerpt"`
 	AuthorId int `json:"author"`
 	AuthorName string
+	AuthorImage string
+	AuthorSlug string
 	AcfData ProductAdIdData `json:"acf"`
 	YoastHeadJson YoastHeadJson `json:"yoast_head_json"`
+	Slug string `json:"slug"`
 }
 
-type AuthorNameData struct {
+type AuthorData struct {
 	Name string `json:"name"`
+	YoastHeadJson YoastHeadJson `json:"yoast_head_json"`
+	Slug string `json:"slug"`
+	Id int `json:"id"`
 }
 
 type YoastHeadJson struct {
@@ -36,5 +42,4 @@ type WPDataSlice []WPData
 const (
 	WP_USER_ENDPOINT = "https://spgatsbystg.wpengine.com/wp-json/wp/v2/users"
 	WP_POST_ENDPOINT = "https://spgatsbystg.wpengine.com/wp-json/wp/v2/posts"
-	WP_POSTS_PER_PAGE = 1
 )

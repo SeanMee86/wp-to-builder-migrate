@@ -15,12 +15,15 @@ import (
 )
 
 type BuilderData struct {
-	Title string `json:"title"`
-	Content string `json:"content"`
-	Author string `json:"author"`
-	Excerpt string `json:"excerpt"`
-	ProductAdId int `json:"productAdId"`
+	Title         string `json:"title"`
+	Content       string `json:"content"`
+	Author        string `json:"author"`
+	Excerpt       string `json:"excerpt"`
+	ProductAdId   int    `json:"productAdId"`
 	FeaturedImage string `json:"featuredImage"`
+	Slug          string `json:"slug"`
+	AuthorImage   string `json:"authorImage"`
+	AuthorSlug    string `json:"authorSlug"`
 }
 
 type BuilderImage struct {
@@ -28,10 +31,12 @@ type BuilderImage struct {
 }
 
 type Builder struct {
-	Data BuilderData `json:"data"`
-	Name string `json:"name"`
-	PublishedStatus string `json:"published"`
+	Data            BuilderData `json:"data"`
+	Name            string      `json:"name"`
+	PublishedStatus string      `json:"published"`
 }
+
+type convert func(wp.WPData) Builder
 
 const (
 	BUILDER_WRITE_API_ENDPOINT = "https://builder.io/api/v1/write"
@@ -49,23 +54,23 @@ func getToken() string {
 
 func UploadImageToBuilder(img string) string {
 	imgUrlSlice := strings.Split(img, ".")
-	
+
 	imgType := imgUrlSlice[len(imgUrlSlice)-1]
-	
+
 	resp, err := http.Get(img)
-	
+
 	if err != nil {
 		log.Fatal(err)
 	}
-	
+
 	body, err := io.ReadAll(resp.Body)
-	
+
 	if err != nil {
 		log.Fatal(err)
 	}
-	
+
 	client := &http.Client{}
-	
+
 	req, err := http.NewRequest("POST", "https://builder.io/api/v1/upload", bytes.NewBuffer(body))
 	token := getToken()
 
@@ -91,8 +96,8 @@ func UploadImageToBuilder(img string) string {
 	return builderImgUrl.ImageUrl
 }
 
-func SendToBuilder(wpData wp.WPData) {
-	bd := Builder{
+func CreateBuilderPost(wpData wp.WPData) Builder {
+	return Builder{
 		Name: wpData.Title.Rendered,
 		Data: BuilderData{
 			Author:        wpData.AuthorName,
@@ -101,9 +106,16 @@ func SendToBuilder(wpData wp.WPData) {
 			Excerpt:       wpData.Excerpt.Rendered,
 			ProductAdId:   wpData.AcfData.ProductAds[0],
 			FeaturedImage: wpData.YoastHeadJson.OgImage[0].Url,
+			Slug:          wpData.Slug,
+			AuthorImage:   wpData.AuthorImage,
+			AuthorSlug:    wpData.AuthorSlug,
 		},
 		PublishedStatus: "published",
 	}
+}
+
+func SendPostToBuilder(wpData wp.WPData, generateBuilderData convert) {
+	bd := generateBuilderData(wpData)
 
 	bs, err := json.Marshal(bd)
 
