@@ -97,6 +97,7 @@ func UploadImageToBuilder(img string) string {
 }
 
 func CreateBuilderPost(wpData wp.WPData) Builder {
+	var prod_ad wp.ProductAdIdData
 	return Builder{
 		Name: wpData.Title.Rendered,
 		Data: BuilderData{

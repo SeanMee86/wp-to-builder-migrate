@@ -62,6 +62,7 @@ func StartProgram() {
 		switch o {
 		case "1":
 			migrators.MigrateAuthors()
+			printOptions()
 		case "2":
 			runPostsMigrator(s)
 			printOptions()
@@ -72,7 +73,7 @@ func StartProgram() {
 		default:
 			fmt.Println()
 			fmt.Println("Unknown Command")
-			optionsMessage()
+			printOptions()
 		}
 	}
 }

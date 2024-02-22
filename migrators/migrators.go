@@ -23,7 +23,8 @@ func MigratePosts(postsInfo ...int) {
 		fmt.Println("Too many posts requested")
 		return
 	}
-	resp, err := http.Get(fmt.Sprintf("%s?page=%d&per_page=%d", wp.WP_POST_ENDPOINT, pageNumber, postsInfo[0]))
+	wp_url := fmt.Sprintf("%s?page=%d&per_page=%d", wp.WP_POST_ENDPOINT, pageNumber, postsInfo[0])
+	resp, err := http.Get(wp_url)
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -49,11 +50,11 @@ func MigratePosts(postsInfo ...int) {
 		json.Unmarshal(body, &an)
 		v.AuthorName = an.Name
 		v.AuthorImage = an.YoastHeadJson.OgImage[0].Url
-		fmt.Println(v.YoastHeadJson.OgImage[0].Url)
 		v.AuthorSlug = an.Slug
 		img := v.YoastHeadJson.OgImage[0].Url
 		v.YoastHeadJson.OgImage[0].Url = builder.UploadImageToBuilder(img)
 		v.AuthorImage = builder.UploadImageToBuilder(v.AuthorImage)
+		fmt.Println(v)
 
 		builder.SendPostToBuilder(v, builder.CreateBuilderPost)
 	}
