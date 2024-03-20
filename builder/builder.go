@@ -26,6 +26,13 @@ type BuilderData struct {
 	AuthorSlug    string `json:"authorSlug"`
 }
 
+type AuthorData struct {
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	Image       string `json:"image"`
+	Slug        string `json:"slug"`
+}
+
 type BuilderImage struct {
 	ImageUrl string `json:"url"`
 }
@@ -36,7 +43,14 @@ type Builder struct {
 	PublishedStatus string      `json:"published"`
 }
 
-type convert func(wp.WPData) Builder
+type Author struct {
+	Data            AuthorData `json:"data"`
+	Name            string     `json:"name"`
+	PublishedStatus string     `json:"published"`
+}
+
+type convertPost func(wp.WPData) Builder
+type convertAuthor func(wp.UserData) Author
 
 const (
 	BUILDER_WRITE_API_ENDPOINT = "https://builder.io/api/v1/write"
@@ -73,6 +87,10 @@ func UploadImageToBuilder(img string) string {
 
 	req, err := http.NewRequest("POST", "https://builder.io/api/v1/upload", bytes.NewBuffer(body))
 	token := getToken()
+
+	if err != nil {
+		fmt.Println(err)
+	}
 
 	req.Header.Add("Content-Type", fmt.Sprintf("image/%s", imgType))
 	req.Header.Add("Authorization", token)
@@ -114,7 +132,20 @@ func CreateBuilderPost(wpData wp.WPData) Builder {
 	}
 }
 
-func SendPostToBuilder(wpData wp.WPData, generateBuilderData convert) {
+func CreateAuthorPost(authorData wp.UserData) Author {
+	return Author{
+		Name: authorData.Name,
+		Data: AuthorData{
+			Name: authorData.Name,
+			Description: authorData.Description,
+			Slug: authorData.Slug,
+			Image: authorData.YoastHeadJson.OgImage[0].Url,
+		},
+		PublishedStatus: "published",
+	}
+}
+
+func SendPostToBuilder(wpData wp.WPData, generateBuilderData convertPost) {
 	bd := generateBuilderData(wpData)
 
 	bs, err := json.Marshal(bd)
@@ -125,7 +156,7 @@ func SendPostToBuilder(wpData wp.WPData, generateBuilderData convert) {
 
 	client := &http.Client{}
 
-	req, err := http.NewRequest("POST", fmt.Sprintf("%s/legacy-blog-article", BUILDER_WRITE_API_ENDPOINT), bytes.NewBuffer(bs))
+	req, err := http.NewRequest("POST", fmt.Sprintf("%s/pollen-post", BUILDER_WRITE_API_ENDPOINT), bytes.NewBuffer(bs))
 
 	if err != nil {
 		log.Fatalln(err)
@@ -144,4 +175,37 @@ func SendPostToBuilder(wpData wp.WPData, generateBuilderData convert) {
 	if err != nil {
 		log.Fatalln(err)
 	}
+}
+
+func SendAuthorToBuilder(authorData wp.UserData, generateBuilderData convertAuthor) {
+	ad := generateBuilderData(authorData)
+
+	bs, err := json.Marshal(ad)
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	client := &http.Client{}
+
+	req, err := http.NewRequest("POST", fmt.Sprintf("%s/author", BUILDER_WRITE_API_ENDPOINT), bytes.NewBuffer(bs))
+
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	token := getToken()
+	req.Header.Add("Authorization", token)
+	req.Header.Add("Content-Type", "application/json")
+
+	resp, err := client.Do(req)
+
+	if err != nil {
+		log.Fatalln(err)
+	}
+	_, err = io.ReadAll(resp.Body)
+	if err != nil {
+		log.Fatalln(err)
+	}
+	fmt.Println("done")
 }

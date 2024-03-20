@@ -45,11 +45,10 @@ func MigratePosts(postsInfo ...int) {
 		if err != nil {
 			log.Fatalln(err)
 		}
-		var an wp.AuthorData
+		var an wp.UserData
 		json.Unmarshal(body, &an)
 		v.AuthorName = an.Name
 		v.AuthorImage = an.YoastHeadJson.OgImage[0].Url
-		fmt.Println(v.YoastHeadJson.OgImage[0].Url)
 		v.AuthorSlug = an.Slug
 		img := v.YoastHeadJson.OgImage[0].Url
 		v.YoastHeadJson.OgImage[0].Url = builder.UploadImageToBuilder(img)
@@ -59,31 +58,25 @@ func MigratePosts(postsInfo ...int) {
 	}
 }
 
-func MigrateAuthors(authorsInfo ...int) {
+func MigrateAuthors() {
+	
+	userSlice := wp.GetWordpressUsers()
 
-	var authorsPerPage int
+	for _, v := range userSlice {
+		
+		isAuthor := wp.CheckIfIsAuthor(v.Id)
 
-	if authorsInfo[1] != 0 {
-		authorsPerPage = authorsInfo[1]
-	} else {
-		authorsPerPage = 1
+		if isAuthor {
+			if len(v.YoastHeadJson.OgImage) > 0 {
+				img := v.YoastHeadJson.OgImage[0].Url
+				v.YoastHeadJson.OgImage[0].Url = builder.UploadImageToBuilder(img)
+			} else {
+				yoastData := append(v.YoastHeadJson.OgImage, wp.SeoImage{
+					Url: "https://cdn.builder.io/api/v1/image/assets%2F6a01583f2cca435aa4d0f2561c553e0c%2F0c25f9072b2c482982d69195fa10f19b?quality=60&width=200&height=200",
+				})
+				v.YoastHeadJson.OgImage = yoastData
+			}
+			builder.SendAuthorToBuilder(v, builder.CreateAuthorPost)
+		}
 	}
-	if authorsInfo[0] > 100 {
-		fmt.Println("Too many posts requested")
-		return
-	}
-
-	resp, err := http.Get(fmt.Sprintf("%s?per_page=%d", wp.WP_USER_ENDPOINT, authorsPerPage))
-
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	body, err := io.ReadAll(resp.Body)
-
-	var authorSlice []wp.AuthorData
-
-	json.Unmarshal(body, &authorSlice)
-
-	fmt.Print(authorSlice)
 }

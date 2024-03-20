@@ -1,9 +1,10 @@
 package main
 
-import (
-	"simplepractice.com/wp-post-migrator/console"
-)
+import "simplepractice.com/wp-post-migrator/migrators"
+
+
 
 func main() {
-	console.StartProgram()
+
+	migrators.MigrateAuthors()
 }
