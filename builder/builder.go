@@ -207,5 +207,6 @@ func SendAuthorToBuilder(authorData wp.UserData, generateBuilderData convertAuth
 	if err != nil {
 		log.Fatalln(err)
 	}
-	fmt.Println("done")
+	fmt.Printf("finished uploading user: %s", authorData.Name)
+	fmt.Println()
 }

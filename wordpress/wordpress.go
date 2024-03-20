@@ -75,8 +75,8 @@ func CheckIfIsAuthor(id int) bool {
 	}
 }
 
-func GetWordpressUsers() []UserData {
-	resp, err := http.Get(fmt.Sprintf("%s?per_page=3", WP_USER_ENDPOINT))
+func GetWordpressUsers(userAmt int, pageNum int) []UserData {
+	resp, err := http.Get(fmt.Sprintf("%s?per_page=%d&page=%d", WP_USER_ENDPOINT, userAmt, pageNum))
 
 	if err != nil {
 		log.Fatal(err)

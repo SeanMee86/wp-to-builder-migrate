@@ -60,7 +60,7 @@ func MigratePosts(postsInfo ...int) {
 
 func MigrateAuthors() {
 	
-	userSlice := wp.GetWordpressUsers()
+	userSlice := wp.GetWordpressUsers(2, 2)
 
 	for _, v := range userSlice {
 		
